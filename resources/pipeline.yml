@@ -1,0 +1,3 @@
+# Lakeflow Declarative Pipeline removed.
+# The pipeline now runs as a plain Spark Structured Streaming notebook task.
+# See: resources/job.yml  →  task_key: streaming_pipeline

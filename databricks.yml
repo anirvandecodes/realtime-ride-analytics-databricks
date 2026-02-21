@@ -1,0 +1,36 @@
+bundle:
+  name: realtime-ride-analytics
+
+variables:
+  alert_email:
+    description: "Email to notify on job failure"
+    default: ""
+  sp_name:
+    description: "Service principal name for prod deployments"
+    default: ""
+  kafka_bootstrap_servers:
+    description: "Confluent Kafka bootstrap servers (host:port)"
+    default: ""
+  kafka_topic:
+    description: "Kafka topic name for ride events"
+    default: "ride-events"
+  kafka_secret_scope:
+    description: "Databricks secret scope holding Kafka API key/secret"
+    default: "confluent-kafka"
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-aef35066-afa2.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-aef35066-afa2.cloud.databricks.com
+    run_as:
+      service_principal_name: ${var.sp_name}

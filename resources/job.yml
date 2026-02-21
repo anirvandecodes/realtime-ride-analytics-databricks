@@ -1,0 +1,40 @@
+resources:
+  jobs:
+    ride_analytics_job:
+      name: "Ride Analytics — Orchestration Job [${bundle.target}]"
+      description: "Runs setup once, then starts the simulator and Spark Structured Streaming pipeline."
+
+      # Run every day at midnight to reset and re-start
+      trigger:
+        periodic:
+          interval: 1
+          unit: DAYS
+
+      tasks:
+        - task_key: setup
+          description: "Create catalog, schema, volumes, and verify secrets"
+          notebook_task:
+            notebook_path: ../src/setup/00_setup.py
+
+        - task_key: simulator
+          description: "Produce realistic ride events to Confluent Kafka topic"
+          depends_on:
+            - task_key: setup
+          notebook_task:
+            notebook_path: ../src/simulator/ride_simulator.py
+          # Note: runs indefinitely — start manually for demos
+
+        - task_key: streaming_pipeline
+          description: "Spark Structured Streaming: Kafka → Bronze → Silver → Gold (runs indefinitely)"
+          depends_on:
+            - task_key: setup
+          notebook_task:
+            notebook_path: ../src/pipeline/ride_pipeline.py
+            base_parameters:
+              kafka_bootstrap_servers: ${var.kafka_bootstrap_servers}
+              kafka_topic:             ${var.kafka_topic}
+              kafka_secret_scope:      ${var.kafka_secret_scope}
+
+      tags:
+        project: ride-analytics
+        env:     ${bundle.target}

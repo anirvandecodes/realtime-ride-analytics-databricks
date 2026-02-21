@@ -1,0 +1,44 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-and-deploy-dev:
+    name: Validate & Deploy (dev)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Databricks CLI
+        run: pip install databricks-cli
+
+      - name: Install Databricks Asset Bundles CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+
+      - name: Validate bundle
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: databricks bundle validate --target dev
+
+      - name: Deploy to dev
+        if: github.event_name == 'push'
+        env:
+          DATABRICKS_HOST:  ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: databricks bundle deploy --target dev
