@@ -10,27 +10,27 @@ variables:
     default: ""
   kafka_bootstrap_servers:
     description: "Confluent Kafka bootstrap servers (host:port)"
-    default: ""
+    default: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
   kafka_topic:
     description: "Kafka topic name for ride events"
     default: "ride-events"
   kafka_secret_scope:
     description: "Databricks secret scope holding Kafka API key/secret"
     default: "confluent-kafka"
+  catalog:
+    description: "Unity Catalog catalog name"
+    default: "workspace"
+  warehouse_id:
+    description: "SQL warehouse ID for the dashboard"
+    default: "6f9ea3149e2abcf0"
 
 include:
   - resources/*.yml
 
 targets:
   dev:
-    mode: development
+    mode: production
     default: true
     workspace:
-      host: https://dbc-aef35066-afa2.cloud.databricks.com
-
-  prod:
-    mode: production
-    workspace:
-      host: https://dbc-aef35066-afa2.cloud.databricks.com
-    run_as:
-      service_principal_name: ${var.sp_name}
+      host: https://dbc-aef35066-afa2.cloud.databricks.com/
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

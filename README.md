@@ -50,23 +50,57 @@ databricks secrets put-secret confluent-kafka api-key    --string-value "<KEY>"
 databricks secrets put-secret confluent-kafka api-secret --string-value "<SECRET>"
 ```
 
-### 2. Deploy
+### 2. Allow Kafka library (admin required)
+
+Add the Spark Kafka connector to the workspace artifact allowlist:
+
 ```bash
-databricks bundle deploy --target dev \
-  --var="kafka_bootstrap_servers=<your-bootstrap>:9092"
+databricks artifact-allowlists update LIBRARY_MAVEN --json '{
+  "artifact_matchers": [
+    {"artifact": "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0", "match_type": "PREFIX_MATCH"}
+  ]
+}'
 ```
 
-### 3. Run setup notebook (once)
+Or via the UI: **Workspace Settings → Compute → Libraries → Allowlist**
+
+### 3. Deploy
+```bash
+databricks bundle deploy --target dev \
+  --var="kafka_bootstrap_servers=<your-bootstrap>:9092" \
+  --var="cluster_id=<existing-cluster-id>"
+```
+
+### 4. Run setup notebook (once)
 `src/setup/00_setup.py` — creates the `workspace.realtime` schema and checkpoints volume.
 
-### 4. Start the simulator
+### 5. Start the simulator
 `src/simulator/ride_simulator.py` — streams ride events to Kafka indefinitely.
 
-### 5. Start the pipeline
+### 6. Start the pipeline
 `src/pipeline/ride_pipeline.py` — run as a Databricks Job. Streams Bronze → Silver → Gold.
 
-### 6. Open the dashboard
-Connect Databricks AI/BI to the Gold tables. Set auto-refresh to 30 seconds.
+### 7. Deploy the dashboard
+
+Upload `Ride Operations Command Center.lvdash.json` to your workspace and publish it:
+
+```bash
+# Create the dashboard
+databricks api post /api/2.0/lakeview/dashboards --json "{
+  \"display_name\": \"Ride Operations Command Center\",
+  \"parent_path\": \"/Workspace/Users/<your-email>\",
+  \"serialized_dashboard\": $(python3 -c "import json; print(json.dumps(open('Ride Operations Command Center.lvdash.json').read()))")
+}"
+
+# Publish it (replace <dashboard-id> with the id returned above)
+databricks api post /api/2.0/lakeview/dashboards/<dashboard-id>/published \
+  --json '{"warehouse_id": "<your-warehouse-id>"}'
+```
+
+The dashboard has 3 pages:
+- **Live Command Center** — real-time KPIs, revenue pulse, ride status breakdown
+- **City & Zone Intelligence** — city comparison, top revenue zones
+- **Demand & Pricing Strategy** — hourly demand, surge multiplier, supply-demand gap
 
 ---
 

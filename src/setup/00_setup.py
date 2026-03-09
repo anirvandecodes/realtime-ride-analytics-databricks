@@ -23,7 +23,6 @@ SCHEMA  = "realtime"
 
 # COMMAND ----------
 
-spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
 spark.sql(f"USE CATALOG {CATALOG}")
 print(f"Catalog '{CATALOG}' ready")
 
@@ -35,7 +34,6 @@ print(f"Catalog '{CATALOG}' ready")
 # COMMAND ----------
 
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA}")
-spark.sql(f"USE SCHEMA {SCHEMA}")
 print(f"Schema '{CATALOG}.{SCHEMA}' ready")
 
 # COMMAND ----------

@@ -1,3 +1,26 @@
-# Lakeflow Declarative Pipeline removed.
-# The pipeline now runs as a plain Spark Structured Streaming notebook task.
-# See: resources/job.yml  →  task_key: streaming_pipeline
+resources:
+  pipelines:
+    ride_analytics_pipeline:
+      name: "Ride Analytics — Pipeline"
+
+      serverless: true
+      continuous: true
+      catalog: ${var.catalog}
+      schema: realtime
+
+      root_path: ${workspace.file_path}
+
+      libraries:
+        - glob:
+            include: ${workspace.file_path}/src/pipeline/transformations/**
+
+      configuration:
+        kafka_bootstrap_servers: ${var.kafka_bootstrap_servers}
+        kafka_topic:             ${var.kafka_topic}
+        kafka_secret_scope:      ${var.kafka_secret_scope}
+
+      channel: CURRENT
+
+      tags:
+        project: ride-analytics
+        env:     ${bundle.target}

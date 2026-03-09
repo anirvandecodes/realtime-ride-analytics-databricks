@@ -1,0 +1,7 @@
+resources:
+  dashboards:
+    executive_dashboard:
+      display_name: "Ride Analytics — Executive Command Center"
+      file_path: ./executive_dashboard.lvdash.json
+      warehouse_id: ${var.warehouse_id}
+      embed_credentials: false
