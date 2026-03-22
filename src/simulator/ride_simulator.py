@@ -1,14 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Ride Event Simulator
-# MAGIC Generates realistic Indian ride-booking events and publishes them to a
-# MAGIC **Confluent Kafka** topic every 5 seconds — simulating a live production feed.
+# MAGIC Generates realistic Indian ride-booking events and writes them as JSON files
+# MAGIC to a **Unity Catalog Volume** every 5 seconds — simulating a live production feed.
 # MAGIC
 # MAGIC **Keep this notebook running** while the Lakeflow pipeline is active.
-
-# COMMAND ----------
-
-# MAGIC %pip install confluent-kafka
 
 # COMMAND ----------
 
@@ -17,15 +13,9 @@
 
 # COMMAND ----------
 
-KAFKA_BOOTSTRAP = "<your-bootstrap-server>:9092"
-KAFKA_TOPIC     = "ride-events"
-SECRET_SCOPE    = "confluent-kafka"
-
+LANDING_PATH  = "/Volumes/workspace/realtime/landing"
 BATCH_SIZE    = 15
 INTERVAL_SECS = 5
-
-_api_key    = dbutils.secrets.get(scope=SECRET_SCOPE, key="api-key")
-_api_secret = dbutils.secrets.get(scope=SECRET_SCOPE, key="api-secret")
 
 # COMMAND ----------
 
@@ -39,7 +29,6 @@ import json
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from confluent_kafka import Producer
 
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -188,44 +177,29 @@ def generate_ride_event() -> dict:
 
 # MAGIC %md
 # MAGIC ## Run Simulator
-# MAGIC Publishes one batch of ride events to Confluent Kafka every 5 seconds.
-# MAGIC Each batch = 15 ride events (one Kafka message per event, key = ride_id).
+# MAGIC Writes one batch of ride events as a JSON file to the landing volume every 5 seconds.
+# MAGIC Each file = 15 ride events (one JSON object per line).
 
 # COMMAND ----------
 
-producer = Producer({
-    "bootstrap.servers":  KAFKA_BOOTSTRAP,
-    "security.protocol":  "SASL_SSL",
-    "sasl.mechanisms":    "PLAIN",
-    "sasl.username":      _api_key,
-    "sasl.password":      _api_secret,
-})
+dbutils.fs.mkdirs(LANDING_PATH)
 
-def delivery_report(err, msg):
-    if err:
-        print(f"  [ERROR] Delivery failed: {err}")
-
-print(f"Starting ride simulator → Kafka topic '{KAFKA_TOPIC}' on {KAFKA_BOOTSTRAP}")
+print(f"Starting ride simulator → Volume '{LANDING_PATH}'")
 print(f"Batch size: {BATCH_SIZE} rides | Interval: {INTERVAL_SECS}s\n")
 
 batch_num = 0
 while True:
     batch_num += 1
+    now    = datetime.now(IST)
     events = [generate_ride_event() for _ in range(BATCH_SIZE)]
 
-    for event in events:
-        producer.produce(
-            topic    = KAFKA_TOPIC,
-            key      = event["ride_id"].encode("utf-8"),
-            value    = json.dumps(event).encode("utf-8"),
-            callback = delivery_report,
-        )
-
-    producer.flush()
+    file_path = f"{LANDING_PATH}/rides_{now.strftime('%Y%m%d_%H%M%S')}_{batch_num:05d}.jsonl"
+    jsonl     = "\n".join(json.dumps(e) for e in events)
+    dbutils.fs.put(file_path, jsonl, overwrite=True)
 
     completed = sum(1 for e in events if e["status"] == "completed")
     revenue   = sum(e["final_fare"] for e in events if e["status"] == "completed")
-    print(f"[Batch {batch_num:05d}] {len(events)} events published | "
-          f"{completed} completed | ₹{revenue:,.0f} revenue")
+    print(f"[Batch {batch_num:05d}] {len(events)} events written | "
+          f"{completed} completed | ₹{revenue:,.0f} revenue | {file_path.split('/')[-1]}")
 
     time.sleep(INTERVAL_SECS)

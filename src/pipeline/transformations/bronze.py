@@ -5,17 +5,7 @@ from pyspark.sql.types import (
     IntegerType, BooleanType,
 )
 
-KAFKA_BOOTSTRAP = spark.conf.get("kafka_bootstrap_servers")
-KAFKA_TOPIC     = spark.conf.get("kafka_topic",        "ride-events")
-SECRET_SCOPE    = spark.conf.get("kafka_secret_scope", "confluent-kafka")
-
-_api_key    = dbutils.secrets.get(scope=SECRET_SCOPE, key="api-key")
-_api_secret = dbutils.secrets.get(scope=SECRET_SCOPE, key="api-secret")
-
-KAFKA_JAAS = (
-    "kafkashaded.org.apache.kafka.common.security.plain.PlainLoginModule required "
-    f'username="{_api_key}" password="{_api_secret}";'
-)
+LANDING_PATH = spark.conf.get("landing_volume_path", "/Volumes/workspace/realtime/landing")
 
 RIDE_SCHEMA = StructType([
     StructField("ride_id",             StringType(),  nullable=True),
@@ -42,29 +32,15 @@ RIDE_SCHEMA = StructType([
 
 
 @dp.table(
-    comment="Raw ride events ingested from Confluent Kafka. Append-only, no transformations.",
+    comment="Raw ride events ingested from volume landing zone. Append-only, no transformations.",
     table_properties={"quality": "bronze"},
 )
 def bronze_ride_events():
     return (
         spark.readStream
-            .format("kafka")
-            .option("kafka.bootstrap.servers",                     KAFKA_BOOTSTRAP)
-            .option("kafka.security.protocol",                     "SASL_SSL")
-            .option("kafka.sasl.mechanism",                        "PLAIN")
-            .option("kafka.sasl.jaas.config",                      KAFKA_JAAS)
-            .option("kafka.ssl.endpoint.identification.algorithm", "https")
-            .option("subscribe",                                   KAFKA_TOPIC)
-            .option("startingOffsets",  "latest")
-            .option("failOnDataLoss",   "false")
-            .load()
-            .withColumn("value_str", F.col("value").cast("string"))
-            .withColumn("ride",      F.from_json(F.col("value_str"), RIDE_SCHEMA))
-            .select(
-                F.col("ride.*"),
-                F.col("timestamp").alias("kafka_timestamp"),
-                F.col("partition").alias("kafka_partition"),
-                F.col("offset").alias("kafka_offset"),
-            )
+            .format("cloudFiles")
+            .option("cloudFiles.format", "json")
+            .schema(RIDE_SCHEMA)
+            .load(LANDING_PATH)
             .withColumn("_ingest_time", F.current_timestamp())
     )

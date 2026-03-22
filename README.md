@@ -8,10 +8,10 @@ End-to-end streaming platform built with Confluent Kafka, Spark Structured Strea
 
 ```
 Ride Event Simulator
-        │  confluent-kafka producer · 15 events / 5s
+        │  writes .jsonl files · 15 events / 5s
         ▼
-Confluent Kafka  (ride-events topic)
-        │  Spark Structured Streaming
+UC Volume  (/Volumes/workspace/realtime/landing)
+        │  Auto Loader (cloudFiles) · Spark Structured Streaming
         ▼
 Bronze → Silver → Gold  (Delta Lake · Unity Catalog)
         │  foreachBatch · 30s refresh
@@ -41,38 +41,16 @@ CI/CD         : Databricks Asset Bundles + GitHub Actions
 
 ## Quickstart
 
-**Prerequisites:** Databricks workspace · Databricks CLI · Confluent Cloud account
+**Prerequisites:** Databricks workspace · Databricks CLI
 
-### 1. Set up secrets
+### 1. Deploy
 ```bash
-databricks secrets create-scope confluent-kafka
-databricks secrets put-secret confluent-kafka api-key    --string-value "<KEY>"
-databricks secrets put-secret confluent-kafka api-secret --string-value "<SECRET>"
+databricks bundle deploy --target dev
 ```
 
-### 2. Allow Kafka library (admin required)
+### 2. Run setup notebook (once)  *(was step 4)*
 
-Add the Spark Kafka connector to the workspace artifact allowlist:
-
-```bash
-databricks artifact-allowlists update LIBRARY_MAVEN --json '{
-  "artifact_matchers": [
-    {"artifact": "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0", "match_type": "PREFIX_MATCH"}
-  ]
-}'
-```
-
-Or via the UI: **Workspace Settings → Compute → Libraries → Allowlist**
-
-### 3. Deploy
-```bash
-databricks bundle deploy --target dev \
-  --var="kafka_bootstrap_servers=<your-bootstrap>:9092" \
-  --var="cluster_id=<existing-cluster-id>"
-```
-
-### 4. Run setup notebook (once)
-`src/setup/00_setup.py` — creates the `workspace.realtime` schema and checkpoints volume.
+`src/setup/00_setup.py` — creates the `workspace.realtime` schema, checkpoints volume, and landing volume.
 
 ### 5. Start the simulator
 `src/simulator/ride_simulator.py` — streams ride events to Kafka indefinitely.

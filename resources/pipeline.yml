@@ -15,9 +15,7 @@ resources:
             include: ${workspace.file_path}/src/pipeline/transformations/**
 
       configuration:
-        kafka_bootstrap_servers: ${var.kafka_bootstrap_servers}
-        kafka_topic:             ${var.kafka_topic}
-        kafka_secret_scope:      ${var.kafka_secret_scope}
+        landing_volume_path: ${var.landing_volume_path}
 
       channel: CURRENT
 

@@ -4,9 +4,9 @@ from pyspark.sql import functions as F
 
 @dp.table(comment="Ride demand by pickup area and city for today — identifies hot zones needing driver supply.")
 def gold_pickup_demand():
-    today = spark.read.table("silver_ride_events").filter(F.col("event_date") == F.current_date())
     return (
-        today.groupBy("city", "pickup_area", "zone_id")
+        spark.read.table("silver_ride_events")
+        .groupBy("event_date", "city", "pickup_area", "zone_id")
         .agg(
             F.count("ride_id").alias("total_rides"),
             F.sum(F.when(F.col("status") == "completed", 1).otherwise(0)).alias("completed_rides"),

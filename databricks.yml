@@ -8,15 +8,9 @@ variables:
   sp_name:
     description: "Service principal name for prod deployments"
     default: ""
-  kafka_bootstrap_servers:
-    description: "Confluent Kafka bootstrap servers (host:port)"
-    default: "pkc-921jm.us-east-2.aws.confluent.cloud:9092"
-  kafka_topic:
-    description: "Kafka topic name for ride events"
-    default: "ride-events"
-  kafka_secret_scope:
-    description: "Databricks secret scope holding Kafka API key/secret"
-    default: "confluent-kafka"
+  landing_volume_path:
+    description: "Unity Catalog Volume path where the simulator writes ride event files"
+    default: "/Volumes/workspace/realtime/landing"
   catalog:
     description: "Unity Catalog catalog name"
     default: "workspace"

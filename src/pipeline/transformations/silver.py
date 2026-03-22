@@ -31,5 +31,5 @@ def silver_ride_events():
                 "cancelled_by_user", "cancelled_by_driver", "no_driver_found"
             ).cast("boolean")
         )
-        .drop("kafka_partition", "kafka_offset")
+        .drop("_rescued_data")
     )

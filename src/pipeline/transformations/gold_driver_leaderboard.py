@@ -4,9 +4,9 @@ from pyspark.sql import functions as F
 
 @dp.table(comment="Driver performance leaderboard by city for today — rides, cancellations, rating, revenue.")
 def gold_driver_leaderboard():
-    today = spark.read.table("silver_ride_events").filter(F.col("event_date") == F.current_date())
     return (
-        today.groupBy("driver_id", "driver_name", "city", "vehicle_type")
+        spark.read.table("silver_ride_events")
+        .groupBy("event_date", "driver_id", "driver_name", "city", "vehicle_type")
         .agg(
             F.count("ride_id").alias("total_rides"),
             F.sum(F.when(F.col("status") == "completed", 1).otherwise(0)).alias("completed_rides"),

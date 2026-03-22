@@ -2,10 +2,9 @@ from pyspark import pipelines as dp
 from pyspark.sql import functions as F
 
 
-@dp.table(comment="Today's live operational KPIs: rides, revenue, cancellation rate, active drivers.")
+@dp.table(comment="Live operational KPIs per day: rides, revenue, cancellation rate, active drivers.")
 def gold_live_kpis():
-    today = spark.read.table("silver_ride_events").filter(F.col("event_date") == F.current_date())
-    return today.agg(
+    return spark.read.table("silver_ride_events").groupBy("event_date").agg(
         F.count("ride_id").alias("total_rides"),
         F.sum(
             F.when(F.col("status") == "completed", F.col("final_fare")).otherwise(0)
