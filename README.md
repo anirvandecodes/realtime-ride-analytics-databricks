@@ -58,7 +58,29 @@ databricks bundle deploy --target dev
 ### 6. Start the pipeline
 `src/pipeline/ride_pipeline.py` — run as a Databricks Job. Streams Bronze → Silver → Gold.
 
-### 7. Deploy the dashboard
+### 7. Pull the latest dashboard definition (if modified remotely)
+
+If you've edited the dashboard directly in the Databricks UI, pull the latest version back into the repo before deploying:
+
+```bash
+databricks bundle generate dashboard --existing-id <dashboard-id> \
+  --target dev \
+  > resources/executive_dashboard.lvdash.json
+```
+
+Or use the Databricks CLI to download it directly:
+
+```bash
+databricks api get /api/2.0/lakeview/dashboards/<dashboard-id> \
+  | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['serialized_dashboard'])" \
+  | python3 -c "import sys, json; print(json.dumps(json.loads(sys.stdin.read()), indent=2))" \
+  > resources/executive_dashboard.lvdash.json
+```
+
+Find your dashboard ID in the URL when viewing it in the workspace:
+`https://<workspace>.azuredatabricks.net/sql/dashboardsv3/<dashboard-id>`
+
+### 8. Deploy the dashboard
 
 Upload `Ride Operations Command Center.lvdash.json` to your workspace and publish it:
 
