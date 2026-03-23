@@ -60,25 +60,16 @@ databricks bundle deploy --target dev
 
 ### 7. Pull the latest dashboard definition (if modified remotely)
 
-If you've edited the dashboard directly in the Databricks UI, pull the latest version back into the repo before deploying:
+If you've edited the dashboard directly in the Databricks UI, pull the latest version back into the repo:
 
 ```bash
-databricks bundle generate dashboard --existing-id <dashboard-id> \
-  --target dev \
-  > resources/executive_dashboard.lvdash.json
+databricks bundle generate dashboard --existing-id <dashboard-id> --target dev
 ```
 
-Or use the Databricks CLI to download it directly:
+This generates both the `.lvdash.json` file and the corresponding `dashboard.yml` resource entry. It works for **any** dashboard in your workspace — even ones not yet tracked in a bundle.
 
-```bash
-databricks api get /api/2.0/lakeview/dashboards/<dashboard-id> \
-  | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['serialized_dashboard'])" \
-  | python3 -c "import sys, json; print(json.dumps(json.loads(sys.stdin.read()), indent=2))" \
-  > resources/executive_dashboard.lvdash.json
-```
-
-Find your dashboard ID in the URL when viewing it in the workspace:
-`https://<workspace>.azuredatabricks.net/sql/dashboardsv3/<dashboard-id>`
+Find the dashboard ID in the URL when viewing it:
+`https://<workspace>.cloud.databricks.com/sql/dashboardsv3/<dashboard-id>`
 
 ---
 
