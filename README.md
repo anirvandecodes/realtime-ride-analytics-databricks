@@ -11,7 +11,7 @@ Ride Event Simulator
         │  writes .jsonl files · 15 events / 5s
         ▼
 UC Volume  (/Volumes/workspace/realtime/landing)
-        │  Auto Loader (cloudFiles) · Spark Structured Streaming
+        │  Auto Loader (cloudFiles)
         ▼
 Bronze → Silver → Gold  (Delta Lake · Unity Catalog)
         │  Lakeflow Declarative Pipelines
