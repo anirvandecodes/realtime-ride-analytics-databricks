@@ -80,28 +80,6 @@ databricks api get /api/2.0/lakeview/dashboards/<dashboard-id> \
 Find your dashboard ID in the URL when viewing it in the workspace:
 `https://<workspace>.azuredatabricks.net/sql/dashboardsv3/<dashboard-id>`
 
-### 8. Deploy the dashboard
-
-Upload `Ride Operations Command Center.lvdash.json` to your workspace and publish it:
-
-```bash
-# Create the dashboard
-databricks api post /api/2.0/lakeview/dashboards --json "{
-  \"display_name\": \"Ride Operations Command Center\",
-  \"parent_path\": \"/Workspace/Users/<your-email>\",
-  \"serialized_dashboard\": $(python3 -c "import json; print(json.dumps(open('Ride Operations Command Center.lvdash.json').read()))")
-}"
-
-# Publish it (replace <dashboard-id> with the id returned above)
-databricks api post /api/2.0/lakeview/dashboards/<dashboard-id>/published \
-  --json '{"warehouse_id": "<your-warehouse-id>"}'
-```
-
-The dashboard has 3 pages:
-- **Live Command Center** — real-time KPIs, revenue pulse, ride status breakdown
-- **City & Zone Intelligence** — city comparison, top revenue zones
-- **Demand & Pricing Strategy** — hourly demand, surge multiplier, supply-demand gap
-
 ---
 
 ## Data
