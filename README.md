@@ -63,10 +63,24 @@ databricks bundle deploy --target dev
 If you've edited the dashboard directly in the Databricks UI, pull the latest version back into the repo:
 
 ```bash
-databricks bundle generate dashboard --existing-id <dashboard-id> --target dev
+databricks bundle generate dashboard \
+  --existing-id <dashboard-id> \
+  --resource-dir resources \
+  --dashboard-dir resources \
+  --key executive_dashboard
 ```
 
-This generates both the `.lvdash.json` file and the corresponding `dashboard.yml` resource entry. It works for **any** dashboard in your workspace — even ones not yet tracked in a bundle.
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--existing-id` | Dashboard ID to import | — |
+| `--existing-path` | Workspace path of dashboard (alternative to `--existing-id`) | — |
+| `--resource-dir` | Where to write the `.dashboard.yml` | `resources/` |
+| `--dashboard-dir` | Where to write the `.lvdash.json` | `src/` |
+| `--key` | Resource key used in the generated YAML | — |
+| `--force` | Overwrite existing files | false |
+| `--watch` | Continuously sync UI changes to local files | false |
+
+This generates both the `.lvdash.json` and the `.dashboard.yml` resource entry. It works for **any** dashboard in your workspace — even ones not yet tracked in a bundle.
 
 Find the dashboard ID in the URL when viewing it:
 `https://<workspace>.cloud.databricks.com/sql/dashboardsv3/<dashboard-id>`
