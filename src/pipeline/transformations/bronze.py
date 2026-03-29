@@ -33,7 +33,7 @@ RIDE_SCHEMA = StructType([
 
 @dp.table(
     comment="Raw ride events ingested from volume landing zone. Append-only, no transformations.",
-    table_properties={"quality": "bronze"},
+    table_properties={"quality": "bronze"} 
 )
 def bronze_ride_events():
     return (
