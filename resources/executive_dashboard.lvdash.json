@@ -25,7 +25,7 @@
       "name": "ds_cities",
       "displayName": "City Performance",
       "queryLines": [
-        "SELECT city, ROUND(revenue_inr, 0) AS revenue_inr, CAST(total_rides AS BIGINT) AS total_rides FROM workspace.realtime.gold_rides_by_city ORDER BY revenue_inr DESC"
+        "SELECT city, ROUND(revenue_inr, 0) AS revenue_inr FROM workspace.realtime.gold_rides_by_city ORDER BY revenue_inr DESC"
       ]
     },
     {
@@ -39,14 +39,14 @@
       "name": "ds_cancel_reasons",
       "displayName": "Cancellation Reasons",
       "queryLines": [
-        "SELECT city, COALESCE(NULLIF(cancellation_reason,''), status) AS reason, CAST(COUNT(ride_id) AS BIGINT) AS cancellation_count FROM workspace.realtime.silver_ride_events WHERE event_date >= date_sub(current_date(), 1) AND is_cancelled = true GROUP BY city, COALESCE(NULLIF(cancellation_reason,''), status) ORDER BY cancellation_count DESC"
+        "SELECT city, COALESCE(NULLIF(cancellation_reason,''), status) AS reason, CAST(SUM(cancellation_count) AS BIGINT) AS cancellation_count FROM workspace.realtime.gold_cancellation_analysis GROUP BY city, COALESCE(NULLIF(cancellation_reason,''), status) ORDER BY cancellation_count DESC"
       ]
     },
     {
       "name": "ds_pickup",
       "displayName": "Pickup Demand",
       "queryLines": [
-        "SELECT city, pickup_area, zone_id, CAST(COUNT(ride_id) AS BIGINT) AS total_rides, CAST(SUM(CASE WHEN is_cancelled THEN 1 ELSE 0 END) AS BIGINT) AS cancelled_rides, ROUND(SUM(CASE WHEN is_cancelled THEN 1 ELSE 0 END) * 100.0 / COUNT(ride_id), 1) AS cancel_rate_pct FROM workspace.realtime.silver_ride_events WHERE event_date >= date_sub(current_date(), 1) GROUP BY city, pickup_area, zone_id ORDER BY total_rides DESC"
+        "SELECT city, pickup_area, zone_id, CAST(SUM(total_rides) AS BIGINT) AS total_rides, CAST(SUM(cancelled_rides) AS BIGINT) AS cancelled_rides, ROUND(SUM(cancelled_rides) * 100.0 / NULLIF(SUM(total_rides), 0), 1) AS cancel_rate_pct FROM workspace.realtime.gold_pickup_demand GROUP BY city, pickup_area, zone_id ORDER BY total_rides DESC"
       ]
     }
   ],

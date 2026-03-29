@@ -6,7 +6,7 @@ from pyspark.sql import functions as F
 def gold_rides_by_city():
     return (
         spark.read.table("silver_ride_events")
-        .groupBy("event_date", "city")
+        .groupBy("city")
         .agg(
             F.count("ride_id").alias("total_rides"),
             F.sum(F.when(F.col("status") == "completed", 1).otherwise(0)).alias("completed_rides"),
