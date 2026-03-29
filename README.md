@@ -6,6 +6,8 @@ End-to-end streaming analytics platform simulating how ride-booking companies mo
 
 ## Architecture
 
+![Architecture](architecture.png)
+
 ```
 Ride Event Simulator
         │  writes .jsonl files · 15 events / 5s
